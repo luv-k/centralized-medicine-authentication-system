@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Databases and generated files
+*.db
+back_end/output_json/
+managment_side/generated_qrs/
+managment_side/database_serials_hashing/serials_hashes.json
+
+# Environment / secrets
+.env
+.env.*
+secrets.json
+
+# Logs
+*.log
+logs/
+
+# Misc
+*.pyc
+*.pyo
+*.pyd
+*.swp
+~*
