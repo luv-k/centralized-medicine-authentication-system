@@ -134,8 +134,7 @@ scan codes.  The decoded value is sent to the backend for verification.
 ## 🛠 Development & Testing
 
 - Reuse functions in `services_mang/` and `back_end/services/` for scripting.
-- Add tests to exercise generation → scan → lookup paths, using the pipeline
-  script for headless validation.
+- Add tests to exercise generation → scan → lookup paths, using the `pipline.py` Script for headless validation.
 - Extend `back_end/app.py` with new API routes as project requirements evolve.
 
 ---
