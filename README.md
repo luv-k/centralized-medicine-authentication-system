@@ -1,96 +1,151 @@
-# Technology Driven Detection and Prevention of Medicine Adulteration
+# Centralized Medicine Authentication System
 
-A nationwide centralized medicine authentication system for generating, distributing, and verifying secure batch serials and QR codes.  The repository combines a Python backend, a small Tkinter management UI and a React/Vite frontend to cover manufacturer batch creation, QR code generation, and pharmacy/hospital scanning & verification.
+This repository implements a **three‑phase platform** for generating, distributing,
+and verifying secure batch serials and QR codes used by licensed medicine
+manufacturers, pharmacies and hospitals.  The goal is to allow products to be
+scanned and authenticated in real time against a central authority.
 
-## 📁 Repository layout
+The system comprises:
 
-- `back_end/` – FastAPI‑based service and support scripts for QR scanning and database lookup.
-- `managment_side/` – Tkinter GUI, serial/QR generation logic and the local serial‑hash database used by manufacturers.
-- `frontend/` – React + Vite application for a browser‑based user interface.
-- Various `database/`, `generated_qrs/` and `output_json/` directories hold runtime data and should be ignored by Git (see `.gitignore`).
+1. **Management side** – a small Python/Tkinter application used by manufacturers
+to create batches, compute HMAC hashes, and generate QR codes.  Serial/hash
+data are stored locally and replicated to the backend database.
+2. **Backend service** – a FastAPI application that provides QR verification,
+database lookup, and optional command‑line pipelines.  It can run standalone or
+as part of a hosted web deployment.
+3. **Frontend client** – a React + Vite web app that can capture/scan codes
+client‑side and call the backend API.
 
-## 🛠 Prerequisites
+All components use lightweight SQLite databases; files generated at runtime are
+ignored by Git via `.gitignore`.
 
-- **Python 3.8+** (use a virtual environment)  
-- **Node.js 16+ / npm** (for the frontend)  
-- Python packages: `Pillow`, `pyzbar`, `qrcode` (or install via `requirements.txt`)  
-- Optional: `sqlite3` CLI to inspect the SQLite databases.
+---
 
-### Setting up the project
+## 💡 Key Features
 
-```powershell
-# clone & prepare environment
-git clone https://github.com/luv-k/centralized-medicine-authentication-system.git
-cd Technology_Driven_Detection_and_Prevention_of_Medicine_Adulteration
-python -m venv .venv
-.venv\Scripts\Activate.ps1      # Windows
-# or `source .venv/bin/activate` on macOS/Linux
+- HMAC‑based serial hashing for tamper‑resistant verification
+- QR code generation and image output for distribution
+- Central lookup API with real‑time response
+- Optional/local pipeline for offline decoding (`pyzbar`) and JSON audit logs
+- Simple, modular Python code easily repurposed or tested
 
-# install Python dependencies
-pip install Pillow pyzbar qrcode
-# (alternatively maintain a requirements.txt and run `pip install -r requirements.txt`)
+---
 
-# prepare front‑end
-cd frontend
-npm install
+## 📦 Repository Structure
+
+```
+Technology_Driven_Detection_and_Prevention_of_Medicine_Adulteration/
+├─ back_end/              # FastAPI app, pipelines, database lookups
+├─ managment_side/        # Tkinter GUI, serial/QR logic, local DB
+├─ frontend/              # React/Vite web user interface
+├─ .gitignore             # excludes venv, generated files, databases
+├─ README.md              # (this file)
 ```
 
-## 🚀 Running components
+---
 
-### Backend API / QR verification
+## ⚙️ Setup & Requirements
 
-```powershell
-cd back_end
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-# or use the helper pipeline script:
-python piplines.py  # reads a QR image, looks up the hash, and writes JSON output
-```
+1. **Clone repository**
+   ```powershell
+   git clone https://github.com/luv-k/centralized-medicine-authentication-system.git
+   cd Technology_Driven_Detection_and_Prevention_of_Medicine_Adulteration
+   ```
 
-### Management UI (serial & QR generator)
+2. **Python environment**
+   ```powershell
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1   # Windows
+   # or: source .venv/bin/activate  # macOS/Linux
+   pip install Pillow pyzbar qrcode
+   ```
+   > `pyzbar` is only required if you use the backend pipeline. Remove it if
+   > scanning is always done in the browser.  
+   > You can also maintain a `requirements.txt` for reproducibility.
+
+3. **Frontend dependencies**
+   ```powershell
+   cd frontend
+   npm install
+   ```
+
+---
+
+## 🚀 Running the System
+
+### 1. Management UI
 
 ```powershell
 cd managment_side
 python app.py
-``` 
-This starts a simple Tkinter window where you can enter batch info, generate serials and create QR images.  Generated QR files appear in `managment_side/generated_qrs/` and their hashes are stored in both local and backend databases.
+```
 
-### Frontend application
+Complete the form to generate batches, then press “Create QR” to produce PNG
+images and populate both the local and central serial databases.
+
+### 2. Backend Service
+
+```powershell
+cd back_end
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+``` 
+This exposes HTTP endpoints for verification.  See `app.py` for route details.
+
+Alternatively, run the pipeline CLI to decode an image and output JSON:
+
+```powershell
+python piplines.py --input path/to/qr.png
+```
+
+### 3. Frontend Client
 
 ```powershell
 cd frontend
 npm run dev -- --host
-``` 
-Open a browser to the printed local URL to interact with the React UI.  (The frontend is optional; the management UI and backend functions all work without it.)
+```
+Point your browser to the printed address and use the interface to upload or
+scan codes.  The decoded value is sent to the backend for verification.
 
-## 🔒 Security & data notes
-
-- **Keep the HMAC secret safe.**  The `generate_batch` function uses this secret to derive hashes from serials; leaking it compromises the system.
-- `.gitignore` already excludes virtual environments, logs, generated JSON, QR images, and the SQLite files listed above.  Do **not** commit these artifacts.
-- The management tool writes to both `managment_side/database_serials_hashing/serials_hashes.db` and `back_end/database/serials_hashes.db` as a simple redundancy/centralization method.
-
-## 🧩 Architecture overview
-
-- **Serial & hash generation** – runs in `managment_side/services_mang/hashing_encoding.py`.
-- **Product info storage** – handled by `managment_side/services_mang/info_service.py`.
-- **QR creation** – `managment_side/services_mang/qr_generator.py` produces PNGs from hashes.
-- **Scanning & lookup** – the backend decodes QR images in `back_end/services/qr_scan.py` and queries databases via `back_end/services/db_lookup.py`.
-
-## 🧑‍💻 Development notes
-
-- You can use the functions in `services_mang/` and `back_end/services/` directly for automation or testing.
-- Consider adding automated end‑to‑end tests that call generation and scanning routines.
-- API endpoints can be extended in `back_end/app.py` to serve hospitals/pharmacies directly.
-
-## ✅ Next steps (suggestions)
-
-1. Add a `requirements.txt` and/or `package.json` scripts for easier setup.  
-2. Write sample configuration or `.env.example` with guidance on secrets.  
-3. Harden the backend with TLS and authentication if exposed over a network.  
-4. Implement CI to run linting/tests on each PR.
-
-## 🤝 Contributing
-
-Feel free to open issues or pull requests.  Maintainer contact details are in the repository metadata.
 
 ---
-*This README was expanded to include frontend instructions, setup guidance, and repository structure notes.*
+
+## 🗃 Data & Storage
+
+- **Serial hash DBs**
+  - `managment_side/database_serials_hashing/serials_hashes.db` (local)
+  - `back_end/database/serials_hashes.db` (central)
+- **Product info DB**: `back_end/database/info_db/info.db`
+- **Generated QR images**: `managment_side/generated_qrs/`
+- **Verification outputs**: `back_end/output_json/`
+
+> All of the above are ignored by Git; do not commit them.
+
+---
+
+## 🔐 Security Considerations
+
+- The HMAC secret used in `generate_batch` must remain confidential.  Anyone
+  with the secret can forge valid hashes.
+- Use TLS and authentication when exposing the backend API in production.
+- Periodically rotate secrets and revoke stale database entries as needed.
+
+---
+
+## 🛠 Development & Testing
+
+- Reuse functions in `services_mang/` and `back_end/services/` for scripting.
+- Add tests to exercise generation → scan → lookup paths, using the pipeline
+  script for headless validation.
+- Extend `back_end/app.py` with new API routes as project requirements evolve.
+
+---
+
+## 📄 Contribution & License
+
+Contributions welcome via pull request.  Follow standard GitHub workflow and
+keep changes scoped to one logical feature or fix.  This project is licensed
+under the terms of the [LICENSE](LICENSE) file.
+
+---
+
+*Generated and maintained by the project team.*
